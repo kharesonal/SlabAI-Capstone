@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "slabAI.name" . }}-{{ .Chart.Name }}-userservice
+  labels:
+    app: {{ include "slabAI.name" . }}-userservice
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ include "slabAI.name" . }}-userservice
+  template:
+    metadata:
+      labels:
+        app: {{ include "slabAI.name" . }}-userservice
+    spec:
+      containers:
+      - name: {{ .Chart.Name }}-userservice
+        image: "{{ .Values.uesrService.repository }}:{{ .Values.uesrService.tag }}"
+        imagePullPolicy: {{ .Values.uesrService.pullPolicy }}
+        ports:
+        - containerPort: {{ .Values.service.userPort }}
+        env:
+        - name: MONGO_URI
+          value: "{{ .Values.uesrService.mongoUri }}"
+        - name: PORT
+          value: "{{ .Values.uesrService.port }}"

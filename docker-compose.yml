@@ -1,0 +1,92 @@
+version: '2.2'
+
+networks:
+  slabai-network:
+    driver: bridge
+
+services:
+  payment-service:
+    depends_on:
+      - redis
+      - database
+    image: payment-service:latest
+    build:
+      context: ./backend/paymentService
+      dockerfile: Dockerfile
+    networks:
+      - slabai-network
+    environment:
+      MONGO_URI: "mongodb+srv://sukhilnair:sukhil123@cluster0.dm4xp4t.mongodb.net/slabai"
+      PORT: 3003
+      RAZORPAY_KEY_ID: "rzp_test_a6CEBoBbltCvzC"
+      RAZORPAY_KEY_SECRET: "bq1a2NzTCviAwGeNCw9pHgF4"
+      AWS_SECRET_ACCESS_KEY: ""
+      AWS_ACCESS_KEY_ID: ""
+      AWS_REGION: "ap-south-1"
+      S3_BUCKET_NAME: "slabai"
+      DOWNLOAD_URL: "http://payment-service:3003"
+      REDIS_URL: "redis://redis:6379"
+
+  project-service:
+    depends_on:
+      - redis
+      - database
+    image: project-service:latest
+    build:
+      context: ./backend/projectService
+      dockerfile: Dockerfile
+    networks:
+      - slabai-network
+    environment:
+      MONGO_URI: "mongodb+srv://sukhilnair:sukhil123@cluster0.dm4xp4t.mongodb.net/slabai"
+      PORT: 3002
+      AWS_SECRET_ACCESS_KEY: "AKIA2CUNLURIJVQL6FUD"
+      AWS_ACCESS_KEY_ID: "gsXOrsjcMPsy80C7WYDaiShmZnxcuWE1TIIuK9D+"
+      AWS_REGION: "ap-south-1"
+      S3_BUCKET_NAME: "slabai"
+      REDIS_URL: "redis://redis:6379"
+
+  user-service:
+    depends_on:
+      - database
+    image: user-service:latest
+    build:
+      context: ./backend/userService
+      dockerfile: Dockerfile
+    networks:
+      - slabai-network
+    environment:
+      MONGO_URI: "mongodb+srv://sukhilnair:sukhil123@cluster0.dm4xp4t.mongodb.net/slabai"
+      PORT: 3001
+
+  frontend-service:
+    image: frontend:latest
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    networks:
+      - slabai-network
+    ports:
+      - "8088:80"
+      
+  database:
+    container_name: database
+    image: mongo:latest
+    networks:
+      - slabai-network
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: example
+      MONGO_INITDB_DATABASE: slabai
+    ports:
+      - "27017:27017"
+
+  redis:
+    image: redis:latest
+    container_name: redis
+    networks:
+      - slabai-network
+    volumes:
+      - ./redis_data:/data
+    ports:
+      - "6379:6379"

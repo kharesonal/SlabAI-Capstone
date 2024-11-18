@@ -1,0 +1,33 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mongo-init-scripts
+  labels:
+    app: slabai-database
+data:
+  init-db.js: |
+    // MongoDB script to initialize the 'slabai' database
+    print('Initializing database...');
+
+    // Switch to the 'slabai' database
+    db = db.getSiblingDB('slabai');
+
+    // Create a test collection and insert some test data
+    db.createCollection('testCollection');
+    db.testCollection.insertOne({ name: 'test', createdAt: new Date() });
+
+    print('Database initialized with test data.');
+
+    // Optionally create a user for authentication on the 'slabai' database
+    print('Creating user...');
+    db.createUser({
+      user: "root",
+      pwd: "example",  // Set your desired password
+      roles: [
+        { role: "readWrite", db: "slabai" }
+      ]
+    });
+
+    print('User created for the slabai database.');
+
+    print('Initialization complete.');

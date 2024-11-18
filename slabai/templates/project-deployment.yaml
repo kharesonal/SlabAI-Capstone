@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "slabAI.name" . }}-{{ .Chart.Name }}-projectservice
+  labels:
+    app: {{ include "slabAI.name" . }}-projectservice
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ include "slabAI.name" . }}-projectservice
+  template:
+    metadata:
+      labels:
+        app: {{ include "slabAI.name" . }}-projectservice
+    spec:
+      containers:
+      - name: {{ .Chart.Name }}-projectservice
+        image: "{{ .Values.projectService.repository }}:{{ .Values.projectService.tag }}"
+        imagePullPolicy: {{ .Values.projectService.pullPolicy }}
+        ports:
+        - containerPort: {{ .Values.service.projectPort }}
+        env:
+        - name: MONGO_URI
+          value: "{{ .Values.projectService.mongoUri }}"
+        - name: PORT
+          value: "{{ .Values.projectService.port }}"
+        - name: AWS_ACCESS_KEY_ID
+          value: "{{ .Values.projectService.awsAccessKey }}"
+        - name: AWS_SECRET_ACCESS_KEY
+          value: "{{ .Values.projectService.awsSecretKey }}"
+        - name: AWS_REGION
+          value: "{{ .Values.projectService.awsRegion }}"
+        - name: S3_BUCKET_NAME
+          value: "{{ .Values.projectService.s3Bucket }}"
+        - name: REDIS_URL
+          value: "{{ .Values.projectService.redisUrl }}"

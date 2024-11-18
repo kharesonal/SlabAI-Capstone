@@ -1,0 +1,59 @@
+replicaCount: 1
+
+paymentService:
+  repository: sukhilnair/slabai
+  tag: paymentService_v1
+  pullPolicy: IfNotPresent
+  mongoUri: "mongodb://root:example@slabai-database:27017/slabai"
+  port: 3001
+  razorpayKeyId: ""
+  razorpayKeySecret: ""
+  awsAccessKey: ""
+  awsSecretKey: ""
+  awsRegion: "ap-south-1"
+  s3Bucket: "slabai"
+  downloadUrl: "http://slabai-paymentservice:3003"
+  redisUrl: "redis://slabai-redis:6379"
+
+projectService:
+  repository: sukhilnair/slabai
+  tag: projectService_v1
+  pullPolicy: IfNotPresent
+  mongoUri: "mongodb://root:example@slabai-database:27017/slabai"
+  port: 3002
+  awsAccessKey: ""
+  awsSecretKey: ""
+  awsRegion: "ap-south-1"
+  s3Bucket: "slabai"
+  redisUrl: "redis://slabai-redis:6379"
+
+uesrService:
+  repository: sukhilnair/slabai
+  tag: userService_v1
+  pullPolicy: IfNotPresent
+  mongoUri: "mongodb://root:example@slabai-database:27017/slabai"
+  port: 3002
+
+dependentService:
+  redis:
+    image: redis:latest
+  database:
+    image: mongo:latest
+    env:
+      username: root
+      password: example
+      database: slabai
+
+imagePullSecrets: []
+
+service:
+  type: LoadBalancer
+  frontendPort: 8088
+  paymentPort: 3003
+  projectPort: 3002
+  userPort: 3001
+  mongoPort: 27017
+  redisPort: 6379
+  
+  
+  

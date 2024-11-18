@@ -1,0 +1,48 @@
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:  # Fix the typo: `metadat` -> `metadata`
+  name: mongodb-pv
+spec:
+  capacity:
+    storage: 5Gi
+  accessModes:  # Fix the typo: `accessMode` -> `accessModes`
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain  # Correct field name
+  hostPath:
+    path: /mnt/data/mongodb
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:  # Fix the typo: `metadat` -> `metadata`
+  name: redis-pv
+spec:
+  capacity:
+    storage: 5Gi
+  accessModes:  # Fix the typo: `accessMode` -> `accessModes`
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain  # Correct field name
+  hostPath:
+    path: /mnt/data/redis
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:  # Fix the typo: `metadat` -> `metadata`
+  name: mongodb-pvc
+spec:
+  accessModes:  # Fix the typo: `accessMode` -> `accessModes`
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:  # Fix the typo: `metadat` -> `metadata`
+  name: redis-pvc
+spec:
+  accessModes:  # Fix the typo: `accessMode` -> `accessModes`
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi

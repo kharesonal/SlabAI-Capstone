@@ -1,0 +1,73 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "slabAI.fullname" . }}-redis
+  labels:
+    app: {{ include "slabAI.fullname" . }}-redis
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ include "slabAI.fullname" . }}-redis
+  template:
+    metadata:
+      labels:
+        app: {{ include "slabAI.fullname" . }}-redis
+    spec:
+      containers:
+        - name: redis
+          image: {{ .Values.dependentService.redis.image }}
+          imagePullPolicy: {{ .Values.dependentService.redis.pullPolicy | default "IfNotPresent" }}
+          ports:
+            - containerPort: {{ .Values.service.redisPort }}
+          volumeMounts:
+            - name: redis-data
+              mountPath: /data
+      volumes:
+        - name: redis-data
+          persistentVolumeClaim:
+            claimName: redis-pvc
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "slabAI.fullname" . }}-database
+  labels:
+    app: {{ include "slabAI.fullname" . }}-database
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ include "slabAI.fullname" . }}-database
+  template:
+    metadata:
+      labels:
+        app: {{ include "slabAI.fullname" . }}-database
+    spec:
+      containers:
+        - name: database
+          image: {{ .Values.dependentService.database.image }}
+          imagePullPolicy: {{ .Values.dependentService.database.pullPolicy | default "IfNotPresent" }}
+          ports:
+            - containerPort: {{ .Values.service.mongoPort }}
+          env:
+            - name: MONGO_INITDB_ROOT_USERNAME
+              value: "{{ .Values.dependentService.database.env.username }}"
+            - name: MONGO_INITDB_ROOT_PASSWORD
+              value: "{{ .Values.dependentService.database.env.password }}"
+            - name: MONGO_INITDB_DATABASE
+              value: "{{ .Values.dependentService.database.env.database }}"
+          volumeMounts:
+            - name: mongo-data
+              mountPath: /data/db
+            - name: mongo-init-scripts
+              mountPath: /docker-entrypoint-initdb.d 
+      volumes:
+        - name: mongo-data
+          persistentVolumeClaim:
+            claimName: mongodb-pvc
+        - name: mongo-init-scripts
+          configMap:
+            name: mongo-init-scripts 

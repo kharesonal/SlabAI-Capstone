@@ -1,0 +1,70 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "slabAI.name" . }}-paymentservice
+  labels:
+    app: {{ include "slabAI.name" . }}-paymentservice
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.service.paymentPort }}
+      targetPort: {{ .Values.service.paymentPort }}
+  selector:
+    app: {{ include "slabAI.name" . }}-paymentservice
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "slabAI.name" . }}-projectservice
+  labels:
+    app: {{ include "slabAI.name" . }}-projectservice
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.service.projectPort }}
+      targetPort: {{ .Values.service.projectPort }}
+  selector:
+    app: {{ include "slabAI.name" . }}-projectservice
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "slabAI.name" . }}-userservice
+  labels:
+    app: {{ include "slabAI.name" . }}-userservice
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.service.userPort }}
+      targetPort: {{ .Values.service.userPort }}
+  selector:
+    app: {{ include "slabAI.name" . }}-userservice
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "slabAI.name" . }}-redis
+  labels:
+    app: {{ include "slabAI.name" . }}-redis
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.service.redisPort }}
+      targetPort: {{ .Values.service.redisPort }}
+  selector:
+    app: {{ include "slabAI.name" . }}-redis
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "slabAI.name" . }}-database
+  labels:
+    app: {{ include "slabAI.name" . }}-database
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.service.mongoPort }}
+      targetPort: {{ .Values.service.mongoPort }}
+  selector:
+    app: {{ include "slabAI.name" . }}-database

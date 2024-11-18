@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "slabAI.name" . }}-{{ .Chart.Name }}-paymentservice
+  labels:
+    app: {{ include "slabAI.name" . }}-paymentservice
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ include "slabAI.name" . }}-paymentservice
+  template:
+    metadata:
+      labels:
+        app: {{ include "slabAI.name" . }}-paymentservice
+    spec:
+      containers:
+      - name: {{ .Chart.Name }}-paymentservice
+        image: "{{ .Values.paymentService.repository }}:{{ .Values.paymentService.tag }}"
+        imagePullPolicy: {{ .Values.paymentService.pullPolicy | default "IfNotPresent" }}
+        ports:
+        - containerPort: {{ .Values.service.paymentPort }}
+        env:
+        - name: MONGO_URI
+          value: "{{ .Values.paymentService.mongoUri }}"
+        - name: PORT
+          value: "{{ .Values.paymentService.port }}"
+        - name: RAZORPAY_KEY_ID
+          value: "{{ .Values.paymentService.razorpayKeyId }}"
+        - name: RAZORPAY_KEY_SECRET
+          value: "{{ .Values.paymentService.razorpayKeySecret }}"
+        - name: AWS_ACCESS_KEY_ID
+          value: "{{ .Values.paymentService.awsAccessKey }}"
+        - name: AWS_SECRET_ACCESS_KEY
+          value: "{{ .Values.paymentService.awsSecretKey }}"
+        - name: AWS_REGION
+          value: "{{ .Values.paymentService.awsRegion }}"
+        - name: S3_BUCKET_NAME
+          value: "{{ .Values.paymentService.s3Bucket }}"
+        - name: REDIS_URL
+          value: "{{ .Values.paymentService.redisUrl }}"
+        - name: DOWNLOAD_URL
+          value: "{{ .Values.paymentService.downloadUrl }}"
