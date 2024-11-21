@@ -1,12 +1,12 @@
 terraform {
   required_providers {
     aws = {
-      source  = "hashicorp/aws"
-      version = "5.73.0"
+      source = "hashicorp/aws"
+      version = "5.76.0"
     }
     azurerm = {
-      source  = "hashicorp/azurerm"
-      version = "4.9.0"
+      source = "hashicorp/azurerm"
+      version = "4.10.0"
     }
   }
 }
@@ -19,6 +19,7 @@ provider "azurerm" {
   # client_secret   = var.client_secret
   subscription_id = var.subscription_id
   tenant_id       = var.tenant_id
+
 }
 
 provider "aws" {

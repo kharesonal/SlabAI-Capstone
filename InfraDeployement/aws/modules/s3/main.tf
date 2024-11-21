@@ -41,9 +41,9 @@ resource "aws_s3_bucket_website_configuration" "this" {
   }                              
 }
 
-resource "aws_s3_bucket_object" "files" {
+resource "aws_s3_object" "files" {
   for_each = fileset("../../../../frontend/template", "**")
-  bucket = aws_s3_bucket.this.bucket_name
+  bucket = aws_s3_bucket.this.bucket
   key    = each.key
   source = "../../../../frontend/template/${each.value}"   
   etag   = filemd5("../../../../frontend/template/${each.value}") 

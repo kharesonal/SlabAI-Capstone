@@ -1,6 +1,6 @@
 module "s3_bucket" {
   source = "./modules/s3"
-  bucket_name = "sukhil-multicloud-infra4"
+  bucket_name = "sukhil-multicloud-infra5"
   acl = "public-read"
 }
 

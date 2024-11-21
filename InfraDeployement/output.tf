@@ -11,10 +11,18 @@ output "cloudfront_domain_name" {
   value = module.aws.cloudfront_domain_name
 }
 
-output "virttual_machine" {
-  value = module.azure.virtual_machine_id
+output "aks_cluster_id" {
+  description = "Cluster ID"
+  value = module.azure.aks_cluster_id
 }
 
-output "virttual_machine_ip" {
-  value = module.azure.virtual_machine_ip
+
+output "lb_id" {
+  description = "LoadBalancer ID"
+  value = module.azure.lb_id
+}
+
+output "frontend_ip" {
+  description = "FrontEnd IP"
+  value = module.azure.frontend_ip
 }
