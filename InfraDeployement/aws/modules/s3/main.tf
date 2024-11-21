@@ -42,13 +42,33 @@ resource "aws_s3_bucket_website_configuration" "this" {
 }
 
 resource "aws_s3_object" "files" {
-  for_each = fileset("../../../../frontend/template", "**")
-  bucket = aws_s3_bucket.this.bucket
-  key    = each.key
-  source = "../../../../frontend/template/${each.value}"   
-  etag   = filemd5("../../../../frontend/template/${each.value}") 
+  for_each = fileset("../frontend/template", "**")
+  bucket    = aws_s3_bucket.this.bucket
+  key       = each.value
+  source    = "../frontend/template/${each.value}"
+  etag      = filemd5("../frontend/template/${each.value}")
+  
+  # Automatically detect and set the Content-Type
+  content_type = lookup(
+    {
+      "html"  = "text/html"
+      "css"   = "text/css"
+      "js"    = "application/javascript"
+      "jpg"   = "image/jpeg"
+      "jpeg"  = "image/jpeg"
+      "png"   = "image/png"
+      "svg"   = "image/svg+xml"
+      "ico"   = "image/x-icon"
+      "ttf"   = "font/ttf"
+      "woff"  = "font/woff"
+      "woff2" = "font/woff2"
+      "eot"   = "application/vnd.ms-fontobject"
+      "scss"  = "text/x-scss"
+    },
+    split(".", each.value)[length(split(".", each.value)) - 1], # Extract the file extension
+    "binary/octet-stream" # Default MIME type
+  )
 }
-
 output "bucket_name" {
   description = "This is the bucket name"
   value       = aws_s3_bucket.this.bucket

@@ -28,10 +28,10 @@ variable "vm_size" {
   type        = string
 }
 
-variable "subnet_id" {
-  description = "The subnet ID for the AKS cluster"
-  type        = string
-}
+# variable "subnet_id" {
+#   description = "The subnet ID for the AKS cluster"
+#   type        = string
+# }
 
 variable "tags" {
   description = "Tags for the AKS cluster"
@@ -40,7 +40,7 @@ variable "tags" {
 }
 
 
-variable "public_ip_id" {
-  description = "The ID of the public IP associated with the Load Balancer"
-  type        = string
-}
+# variable "public_ip_id" {
+#   description = "The ID of the public IP associated with the Load Balancer"
+#   type        = string
+# }

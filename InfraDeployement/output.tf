@@ -17,12 +17,12 @@ output "aks_cluster_id" {
 }
 
 
-output "lb_id" {
-  description = "LoadBalancer ID"
-  value = module.azure.lb_id
-}
+# output "lb_id" {
+#   description = "LoadBalancer ID"
+#   value = module.azure.lb_id
+# }
 
-output "frontend_ip" {
-  description = "FrontEnd IP"
-  value = module.azure.frontend_ip
-}
+# output "frontend_ip" {
+#   description = "FrontEnd IP"
+#   value = module.azure.frontend_ip
+# }

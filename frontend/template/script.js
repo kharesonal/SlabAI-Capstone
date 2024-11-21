@@ -1,9 +1,14 @@
+require('dotenv').config();
+
+const paymentURL = process.env.PAYMENT_ENDPOINT || 'http://localhost:3003';
+const projectURL = process.env.PROJECT_ENDPOINT || 'http://localhost:3002';
+
 document.addEventListener('DOMContentLoaded', function () {
     fetchProjects();
 });
 
 function fetchProjects() {
-    fetch('http://localhost:3002/api/projects')
+    fetch(`${projectURL}/api/projects`)
         .then(response => response.json())
         .then(projects => {
             const container = document.getElementById('projectsContainer');
@@ -65,7 +70,7 @@ function initiatePayment(event, projectId, price) {
         amount: price
     };
 
-    fetch('http://localhost:3003/api/payment/create-order', {
+    fetch(`${paymentURL}/api/payment/create-order`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
@@ -110,7 +115,7 @@ function openRazorpayCheckout(orderDetails, userDetails) {
 }
 
 function verifyPayment(paymentResponse, orderId, userDetails) {
-    fetch('http://localhost:3003/api/payment/verify-payment', {
+    fetch(`${paymentURL}/api/payment/verify-payment`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'

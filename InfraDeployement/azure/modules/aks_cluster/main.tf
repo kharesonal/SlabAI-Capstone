@@ -8,7 +8,6 @@ resource "azurerm_kubernetes_cluster" "aks" {
     name            = "default"
     node_count      = var.node_count
     vm_size         = var.vm_size
-    vnet_subnet_id  = var.subnet_id
   }
 
   identity {
@@ -26,5 +25,5 @@ resource "azurerm_kubernetes_cluster" "aks" {
 
 
 output "aks_cluster_id" {
-  value = azurerm_kubernetes_cluster.aks.id
+  value = azurerm_kubernetes_cluster.aks.fqdn
 }

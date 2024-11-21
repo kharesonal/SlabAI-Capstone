@@ -6,8 +6,8 @@ paymentService:
   pullPolicy: IfNotPresent
   mongoUri: "mongodb://root:example@slabai-database:27017/slabai"
   port: 3001
-  razorpayKeyId: ""
-  razorpayKeySecret: ""
+  razorpayKeyId: "rzp_test_a6CEBoBbltCvzC"
+  razorpayKeySecret: "bq1a2NzTCviAwGeNCw9pHgF4"
   awsAccessKey: ""
   awsSecretKey: ""
   awsRegion: "ap-south-1"
