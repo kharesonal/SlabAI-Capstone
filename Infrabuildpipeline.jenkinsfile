@@ -1,0 +1,117 @@
+import groovy.json.JsonSlurper
+
+pipeline {
+    agent any
+
+    environment {
+        GIT_REPO = "https://github.com/Sukhilnair/slabAI-capstone.git"
+        VAULT_ADDR = 'http://13.126.55.223:8200'
+        VAULT_TOKEN = credentials('vault-token-id')
+        EC2_USER = 'ubuntu'
+        EC2_HOST = '3.109.88.225'
+        DEPLOY_DIR = '/home/ubuntu/flask-app'
+        SSH_CRED_ID = "EC2-access"
+    }
+
+    stages {
+        stage('Fetch Secrets from Vault') {
+            steps {
+                script {
+                    def vaultResponse = httpRequest(
+                        url: "${env.VAULT_ADDR}/v1/slabAI/data/InfraSecrets",
+                        httpMode: 'GET',
+                        customHeaders: [[name: 'X-Vault-Token', value: "${VAULT_TOKEN}"]]
+                    )
+                    def jsonSlurper = new JsonSlurper()
+                    def secrets = jsonSlurper.parseText(vaultResponse.content)
+
+                    env.AWS_REGION = secrets.data.data.aws_region
+                    env.AWS_ACCESS_KEY_ID = secrets.data.data.aws_access_key_id
+                    env.AWS_SECRET_ACCESS_KEY = secrets.data.data.aws_secret_access_key
+                    env.AZURE_CLIENT_ID = secrets.data.data.client_id
+                    env.AZURE_CLIENT_SECRET = secrets.data.data.client_secret
+                    env.AZURE_SUBSCRIBTION_ID = secrets.data.data.subscription_id
+                    env.AZURE_TENENT_ID = secrets.data.data.tenant_id
+                }
+            }
+        }
+
+        stage('Code Clone') {
+            steps {
+                git branch: 'main', url: "${env.GIT_REPO}"
+            }
+        }
+
+        stage('Copy Terraform Files from S3') {
+            steps {
+                script {
+                    withEnv(["AWS_ACCESS_KEY_ID=${env.AWS_ACCESS_KEY_ID}", "AWS_SECRET_ACCESS_KEY=${env.AWS_SECRET_ACCESS_KEY}"]) {
+                        sh '''
+                        echo "Syncing Terraform files from S3"
+                        cd InfraDeployement
+                        aws s3 cp s3://slabaiinfra/ . --recursive
+                        ls -lhrt
+                        '''
+                    }
+                }
+            }
+        }
+
+        stage("Initialize Terraform") {
+            steps {
+                script {
+                    withEnv([
+                        "AWS_REGION=${env.AWS_REGION}",
+                        "AWS_ACCESS_KEY_ID=${env.AWS_ACCESS_KEY_ID}",
+                        "AWS_SECRET_ACCESS_KEY=${env.AWS_SECRET_ACCESS_KEY}",
+                        "AZURE_CLIENT_ID=${env.AZURE_CLIENT_ID}",
+                        "AZURE_CLIENT_SECRET=${env.AZURE_CLIENT_SECRET}",
+                        "AZURE_SUBSCRIBTION_ID=${env.AZURE_SUBSCRIBTION_ID}",
+                        "AZURE_TENENT_ID=${env.AZURE_TENENT_ID}"
+                    ]) {
+                        sh '''
+                        cd InfraDeployement
+                        terraform init \
+                            -var="aws_region=${AWS_REGION}" \
+                            -var="aws_accesskey=${AWS_ACCESS_KEY_ID}" \
+                            -var="aws_secretkey=${AWS_SECRET_ACCESS_KEY}" \
+                            -var="client_id=${AZURE_CLIENT_ID}" \
+                            -var="client_secret=${AZURE_CLIENT_SECRET}" \
+                            -var="subscription_id=${AZURE_SUBSCRIBTION_ID}" \
+                            -var="tenant_id=${AZURE_TENENT_ID}"
+                        '''
+                    }
+                }
+            }
+        }
+
+        stage("Apply Terraform Configuration") {
+            steps {
+                script {
+                    withEnv([
+                        "AWS_REGION=${env.AWS_REGION}",
+                        "AWS_ACCESS_KEY_ID=${env.AWS_ACCESS_KEY_ID}",
+                        "AWS_SECRET_ACCESS_KEY=${env.AWS_SECRET_ACCESS_KEY}",
+                        "AZURE_CLIENT_ID=${env.AZURE_CLIENT_ID}",
+                        "AZURE_CLIENT_SECRET=${env.AZURE_CLIENT_SECRET}",
+                        "AZURE_SUBSCRIBTION_ID=${env.AZURE_SUBSCRIBTION_ID}",
+                        "AZURE_TENENT_ID=${env.AZURE_TENENT_ID}"
+                    ]) {
+                        sh '''
+                        cd InfraDeployement
+                        terraform apply \
+                            -var="aws_region=${AWS_REGION}" \
+                            -var="aws_accesskey=${AWS_ACCESS_KEY_ID}" \
+                            -var="aws_secretkey=${AWS_SECRET_ACCESS_KEY}" \
+                            -var="client_id=${AZURE_CLIENT_ID}" \
+                            -var="client_secret=${AZURE_CLIENT_SECRET}" \
+                            -var="subscription_id=${AZURE_SUBSCRIBTION_ID}" \
+                            -var="tenant_id=${AZURE_TENENT_ID}" \
+                            -auto-approve
+                        '''
+                    }
+                }
+            }
+        }
+    }
+}
