@@ -38,7 +38,7 @@ services:
     networks:
       - slabai-network
     environment:
-      MONGO_URI: "mongodb+srv://sukhilnair:sukhil123@cluster0.dm4xp4t.mongodb.net/slabai"
+      MONGO_URI: "mongodb://root:example@database/slabai"
       PORT: 3002
       AWS_SECRET_ACCESS_KEY: "AKIA2CUNLURIJVQL6FUD"
       AWS_ACCESS_KEY_ID: "gsXOrsjcMPsy80C7WYDaiShmZnxcuWE1TIIuK9D+"
@@ -56,7 +56,7 @@ services:
     networks:
       - slabai-network
     environment:
-      MONGO_URI: "mongodb+srv://sukhilnair:sukhil123@cluster0.dm4xp4t.mongodb.net/slabai"
+      MONGO_URI: "mongodb://root:example@database/slabai"
       PORT: 3001
 
   frontend-service:
@@ -80,6 +80,8 @@ services:
       MONGO_INITDB_DATABASE: slabai
     ports:
       - "27017:27017"
+    volumes:
+      - ./data:/data/db
 
   redis:
     image: redis:latest
