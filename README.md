@@ -174,6 +174,17 @@ Backend services are containerized and pushed to Docker Hub:
 ## Output
 
 ![image3](./SS/output.png)
+![Screenshot 2024-12-01 143518](https://github.com/user-attachments/assets/a4587524-c37a-445b-8ff2-259a24680cf5)
+
+![Screenshot 2024-12-01 143541](https://github.com/user-attachments/assets/9d082755-56e4-44aa-9916-359065bf8069)
+
+![Screenshot 2024-12-01 143643](https://github.com/user-attachments/assets/81b696d2-2ee9-4ee3-9419-8f84102c8d23)
+
+![Screenshot 2024-12-01 143708](https://github.com/user-attachments/assets/e29515e4-cdba-40a0-8bfc-5465290ad5bb)
+
+
+
+
 
 ## Security Considerations
 
