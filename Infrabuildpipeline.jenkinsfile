@@ -7,10 +7,6 @@ pipeline {
         GIT_REPO = "https://github.com/Sukhilnair/slabAI-capstone.git"
         VAULT_ADDR = 'http://13.126.55.223:8200'
         VAULT_TOKEN = credentials('vault-token-id')
-        EC2_USER = 'ubuntu'
-        EC2_HOST = '3.109.88.225'
-        DEPLOY_DIR = '/home/ubuntu/flask-app'
-        SSH_CRED_ID = "EC2-access"
     }
 
     stages {
@@ -57,34 +53,6 @@ pipeline {
             }
         }
 
-        stage("Initialize Terraform") {
-            steps {
-                script {
-                    withEnv([
-                        "AWS_REGION=${env.AWS_REGION}",
-                        "AWS_ACCESS_KEY_ID=${env.AWS_ACCESS_KEY_ID}",
-                        "AWS_SECRET_ACCESS_KEY=${env.AWS_SECRET_ACCESS_KEY}",
-                        "AZURE_CLIENT_ID=${env.AZURE_CLIENT_ID}",
-                        "AZURE_CLIENT_SECRET=${env.AZURE_CLIENT_SECRET}",
-                        "AZURE_SUBSCRIBTION_ID=${env.AZURE_SUBSCRIBTION_ID}",
-                        "AZURE_TENENT_ID=${env.AZURE_TENENT_ID}"
-                    ]) {
-                        sh '''
-                        cd InfraDeployement
-                        terraform init \
-                            -var="aws_region=${AWS_REGION}" \
-                            -var="aws_accesskey=${AWS_ACCESS_KEY_ID}" \
-                            -var="aws_secretkey=${AWS_SECRET_ACCESS_KEY}" \
-                            -var="client_id=${AZURE_CLIENT_ID}" \
-                            -var="client_secret=${AZURE_CLIENT_SECRET}" \
-                            -var="subscription_id=${AZURE_SUBSCRIBTION_ID}" \
-                            -var="tenant_id=${AZURE_TENENT_ID}"
-                        '''
-                    }
-                }
-            }
-        }
-
         stage("Apply Terraform Configuration") {
             steps {
                 script {
@@ -98,7 +66,15 @@ pipeline {
                         "AZURE_TENENT_ID=${env.AZURE_TENENT_ID}"
                     ]) {
                         sh '''
-                        cd InfraDeployement
+                        currentPath=$(pwd)
+                        cd InfraDeployement/.terraform/providers/registry.terraform.io/hashicorp/aws/5.76.0/linux_amd64/
+                        chmod +x terraform-provider-aws_v5.76.0_x5
+
+                        cd ../../../azurerm/4.10.0/linux_amd64/
+                        chmod +x terraform-provider-azurerm_v4.10.0_x5
+
+                        cd $currentPath/InfraDeployement
+                        terraform init -reconfigure
                         terraform apply \
                             -var="aws_region=${AWS_REGION}" \
                             -var="aws_accesskey=${AWS_ACCESS_KEY_ID}" \
@@ -108,6 +84,20 @@ pipeline {
                             -var="subscription_id=${AZURE_SUBSCRIBTION_ID}" \
                             -var="tenant_id=${AZURE_TENENT_ID}" \
                             -auto-approve
+                        '''
+                    }
+                }
+            }
+        }
+        stage('Upload back the terraform data to s3') {
+            steps {
+                script {
+                    withEnv(["AWS_ACCESS_KEY_ID=${env.AWS_ACCESS_KEY_ID}", "AWS_SECRET_ACCESS_KEY=${env.AWS_SECRET_ACCESS_KEY}"]) {
+                        sh '''
+                        echo "Syncing Terraform files from S3"
+                        cd InfraDeployement
+                        aws s3 cp . s3://slabaiinfra/ --recursive --exclude "*" --include "terraform.tfstate*" --include ".terraform/*"
+                        ls -lhrt
                         '''
                     }
                 }
