@@ -184,7 +184,7 @@ Backend services are containerized and pushed to Docker Hub:
 
 ## Presentaion
 
-[SalbAI PPT presentation](https://docs.google.com/presentation/d/1TXBne5SAkOhQXtBRc9S2yBBXNMbrdp2XuCiP3BjtJzc/edit?usp=sharing)
+[SlabAI PPT presentation](https://docs.google.com/presentation/d/1TXBne5SAkOhQXtBRc9S2yBBXNMbrdp2XuCiP3BjtJzc/edit?usp=sharing)
 
 ## Future Improvements
 
