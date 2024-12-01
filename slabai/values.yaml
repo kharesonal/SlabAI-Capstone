@@ -5,7 +5,7 @@ paymentService:
   tag: paymentService_v1
   pullPolicy: IfNotPresent
   mongoUri: "mongodb://root:example@slabai-database:27017/slabai"
-  port: 3001
+  port: 3003
   razorpayKeyId: "rzp_test_a6CEBoBbltCvzC"
   razorpayKeySecret: "bq1a2NzTCviAwGeNCw9pHgF4"
   awsAccessKey: ""
@@ -32,7 +32,7 @@ uesrService:
   tag: userService_v1
   pullPolicy: IfNotPresent
   mongoUri: "mongodb://root:example@slabai-database:27017/slabai"
-  port: 3002
+  port: 3001
 
 dependentService:
   redis:

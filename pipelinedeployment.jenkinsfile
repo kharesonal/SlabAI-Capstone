@@ -1,0 +1,148 @@
+import groovy.json.JsonSlurper
+
+
+pipeline {
+    agent any
+    environment {
+        GIT_REPO = "https://github.com/Sukhilnair/slabAI-capstone.git"
+        AKS_RESOURCE_GROUP = 'sukhil-batch5'
+        AKS_CLUSTER_NAME = 'my-aks-cluster'
+        HELM_RELEASE_NAME = 'slabai'
+        HELM_CHART_PATH = './slabai'
+        VERSION = "v${BUILD_NUMBER}"
+        VAULT_ADDR = 'http://13.126.55.223:8200'
+        VAULT_TOKEN = credentials('vault-token-id')
+    }
+    stages {
+        stage('Fetch Secrets from Vault') {
+            steps {
+                script {
+                    def vaultResponse = httpRequest(
+                        url: "${env.VAULT_ADDR}/v1/slabAI/data/InfraSecrets",
+                        httpMode: 'GET',
+                        customHeaders: [[name: 'X-Vault-Token', value: "${VAULT_TOKEN}"]]
+                    )
+                    def jsonSlurper = new JsonSlurper()
+                    def secrets = jsonSlurper.parseText(vaultResponse.content)
+
+                    env.AWS_ACCESS_KEY_ID = secrets.data.data.aws_access_key_id
+                    env.AWS_SECRET_ACCESS_KEY = secrets.data.data.aws_secret_access_key
+                    env.AWS_REGION = secrets.data.data.aws_region
+                    env.AZURE_CLIENT_ID = secrets.data.data.client_id
+                    env.AZURE_CLIENT_SECRET = secrets.data.data.client_secret
+                    env.AZURE_SUBSCRIPTION_ID = secrets.data.data.subscription_id
+                    env.AZURE_TENANT_ID = secrets.data.data.tenant_id
+                    env.DOCKERHUB_USERNAME = secrets.data.data.docker_username
+                    env.DOCKERHUB_PASSPHASE = secrets.data.data.docker_passphase
+                }
+            }
+        }
+        stage('Code clone') {
+            steps {
+                git branch: 'main', url: "${env.GIT_REPO}"
+            }
+        }
+        stage('Build Backend Docker') {
+            steps {
+                script {
+                    sh '''
+                        docker-compose -f docker-compose.yml build
+                    '''
+                }
+            }
+        }
+        stage('Retag and push to Docker hub') {
+            steps{
+                script{
+                    sh '''
+                        docker tag payment-service:latest sukhilnair/slabai:payment_service_${VERSION}
+                        docker tag project-service:latest sukhilnair/slabai:project_service_${VERSION}
+                        docker tag user-service:latest sukhilnair/slabai:user_service_${VERSION}
+                        echo ${DOCKERHUB_PASSPHASE} | docker login -u ${DOCKERHUB_USERNAME} --password-stdin
+                        docker push sukhilnair/slabai:payment_service_${VERSION}
+                        docker push sukhilnair/slabai:project_service_${VERSION}
+                        docker push sukhilnair/slabai:user_service_${VERSION}
+                    '''
+                }
+            }
+        }
+
+        stage('Setup Azure CLI') {
+            steps {
+                script{
+                    withEnv([
+                            "AZURE_CLIENT_ID=${env.AZURE_CLIENT_ID}",
+                            "AZURE_CLIENT_SECRET=${env.AZURE_CLIENT_SECRET}",
+                            "AZURE_SUBSCRIPTION_ID=${env.AZURE_SUBSCRIPTION_ID}",
+                            "AZURE_TENANT_ID=${env.AZURE_TENANT_ID}"
+                        ]) {
+                            sh '''
+                            echo client $AZURE_CLIENT_ID , password $AZURE_CLIENT_SECRET tenant $AZURE_TENANT_ID
+                            az login --service-principal -u $AZURE_CLIENT_ID -p $AZURE_CLIENT_SECRET --tenant $AZURE_TENANT_ID
+                            az account set --subscription $AZURE_SUBSCRIPTION_ID
+                            '''
+                        }
+                }
+            }
+        }
+        stage('Connect to AKS') {
+            steps {
+                echo 'Configuring AKS context...'
+                sh '''
+                az aks get-credentials --resource-group $AKS_RESOURCE_GROUP --name $AKS_CLUSTER_NAME --overwrite-existing
+                '''
+            }
+        }
+        stage('Helm Upgrade/Install') {
+            steps {
+                echo 'Deploying application with Helm...'
+                sh '''
+                helm lint $HELM_CHART_PATH
+                helm upgrade --install $HELM_RELEASE_NAME $HELM_CHART_PATH \
+                    --set paymentService.tag=payment_service_${VERSION} \
+                    --set projectService.tag=project_service_${VERSION} \
+                    --set userService.tag=user_service_${VERSION} \
+                    --namespace default \
+                    --wait
+                '''
+            }
+        }
+        stage('Create the env file') {
+            steps {
+                echo 'Verifying deployment...'
+                sh '''
+                userservice=$(kubectl get svc slabai-userservice -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+                paymentservice=$(kubectl get svc slabai-paymentservice -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+                projectservice=$(kubectl get svc slabai-projectservice -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+
+                cat <<EOF > ~/.env
+                PROJECT_ENDPOINT="http://$projectservice:3002"
+                PAYMENT_ENDPOINT="http://$paymentservice:3003"
+                USER_ENDPOINT="http://$userservice:3001"
+                EOF
+                          
+                '''
+            }
+        }
+        stage('uplad the env to s3'){
+            steps{
+                echo 'Uploading to s3...'
+                sh '''
+                aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID
+                aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY
+                aws configure set region $AWS_REGION
+
+                aws s3 cp ~/.env s3://sukhil-multicloud-infra5/.env               
+                '''
+            }
+        }
+    }
+    post {
+        success {
+            echo 'Deployment successful!'
+        }
+        failure {
+            echo 'Deployment failed!'
+        }
+    }
+}
